@@ -1,0 +1,130 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">ADMIN CONTROL</div>
+
+<a href="/admin/dashboard" class="nav-item">
+	<span class="nav-icon">◻</span>
+	<span>Dashboard</span>
+</a>
+<a href="/admin/users" class="nav-item active">
+	<span class="nav-icon">⌘</span>
+	<span>Users</span>
+</a>
+<a href="/admin/events" class="nav-item">
+	<span class="nav-icon">◷</span>
+	<span>Events</span>
+</a>
+<a href="/admin/allocations" class="nav-item">
+	<span class="nav-icon">⇄</span>
+	<span>Allocations</span>
+</a>
+<a href="/admin/complaints" class="nav-item">
+	<span class="nav-icon">!</span>
+	<span>Complaints</span>
+</a>
+<a href="/admin/analytics" class="nav-item">
+	<span class="nav-icon">▦</span>
+	<span>Analytics</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+	<span class="nav-icon">↩</span>
+	<span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="stats-grid admin-kpi-grid">
+	<div class="stat-card admin-kpi">
+		<h4>Total Listed Users</h4>
+		<p>{{ users_count }}</p>
+	</div>
+	<div class="stat-card admin-kpi">
+		<h4>Providers</h4>
+		<p>{{ role_summary.get('provider', 0) }}</p>
+	</div>
+	<div class="stat-card admin-kpi">
+		<h4>NGOs</h4>
+		<p>{{ role_summary.get('ngo', 0) }}</p>
+	</div>
+	<div class="stat-card admin-kpi">
+		<h4>Admins</h4>
+		<p>{{ role_summary.get('admin', 0) }}</p>
+	</div>
+</div>
+
+<div class="card">
+	<div class="section-header">
+		<h3>User Control Workspace</h3>
+		<span class="muted">Search, segment, and moderate platform accounts</span>
+	</div>
+
+	<div class="filter-panel">
+		<div class="filter-panel-head">
+			<span class="muted">Use role and search filters to quickly locate target accounts.</span>
+			<a href="{{ url_for('admin.admin_users') }}" class="clear-filter">Reset filters</a>
+		</div>
+		<form method="GET" class="admin-toolbar" style="width:100%; margin-bottom:0;">
+			<input type="text" name="search" value="{{ search }}" placeholder="Search by name or email">
+			<select name="role">
+				<option value="" {% if not role %}selected{% endif %}>All Roles</option>
+				<option value="provider" {% if role == 'provider' %}selected{% endif %}>Provider</option>
+				<option value="ngo" {% if role == 'ngo' %}selected{% endif %}>NGO</option>
+				<option value="admin" {% if role == 'admin' %}selected{% endif %}>Admin</option>
+			</select>
+			<button type="submit" class="auth-button" style="width:auto;">Apply</button>
+		</form>
+	</div>
+
+	<table class="data-table">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Email</th>
+				<th>Role</th>
+				<th>Trust Score</th>
+				<th>Status</th>
+				<th class="no-sort">Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% if users %}
+				{% for item in users %}
+				<tr>
+					<td>{{ item.id }}</td>
+					<td>{{ item.full_name }}</td>
+					<td>{{ item.email }}</td>
+					<td>{{ item.role|title }}</td>
+					<td>
+						{% if item.role == 'provider' %}
+							{{ '%.2f'|format(provider_ratings.get(item.id, 0) or 0) }}
+						{% else %}
+							-
+						{% endif %}
+					</td>
+					<td><span class="status completed">Active</span></td>
+					<td>
+						{% if session.get('user_id') == item.id %}
+							<span class="muted">Current Admin</span>
+						{% else %}
+							<form method="POST" action="/admin/users/{{ item.id }}/delete" class="inline-form" onsubmit="return confirm('Delete this user and related records?');">
+								<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+								<button type="submit" class="btn-link secondary" style="border:none; cursor:pointer;">Delete</button>
+							</form>
+						{% endif %}
+					</td>
+				</tr>
+				{% endfor %}
+			{% else %}
+				<tr><td colspan="7">No users found for this filter.</td></tr>
+			{% endif %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}

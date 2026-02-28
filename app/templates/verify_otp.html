@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Verify OTP{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Email OTP Verification</h2>
+        <p style="margin-top:0; color:#5d6689;">Enter the 6-digit OTP sent to {{ masked_email }}.</p>
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>OTP Code</label>
+                <input type="text" name="otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" placeholder="Enter 6-digit OTP" required>
+            </div>
+
+            <button type="submit" class="auth-button">Verify OTP</button>
+        </form>
+
+        <form method="POST" style="margin-top:10px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="resend">
+            <button type="submit" class="auth-button" style="background: linear-gradient(135deg, #6d748f 0%, #565d78 100%);">Resend OTP</button>
+        </form>
+
+        <div class="auth-footer">
+            {% if purpose == 'register' %}
+                Need to change details? <a href="{{ url_for('auth.register') }}">Back to Register</a>
+            {% else %}
+                Try another email? <a href="{{ url_for('auth.forgot_password') }}">Back to Forgot Password</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

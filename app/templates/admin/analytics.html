@@ -1,0 +1,201 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">ADMIN CONTROL</div>
+
+<a href="/admin/dashboard" class="nav-item">
+	<span class="nav-icon">◻</span>
+	<span>Dashboard</span>
+</a>
+<a href="/admin/users" class="nav-item">
+	<span class="nav-icon">⌘</span>
+	<span>Users</span>
+</a>
+<a href="/admin/events" class="nav-item">
+	<span class="nav-icon">◷</span>
+	<span>Events</span>
+</a>
+<a href="/admin/allocations" class="nav-item">
+	<span class="nav-icon">⇄</span>
+	<span>Allocations</span>
+</a>
+<a href="/admin/complaints" class="nav-item">
+	<span class="nav-icon">!</span>
+	<span>Complaints</span>
+</a>
+<a href="/admin/analytics" class="nav-item active">
+	<span class="nav-icon">▦</span>
+	<span>Analytics</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+	<span class="nav-icon">↩</span>
+	<span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}System Analytics{% endblock %}
+
+{% block content %}
+<div class="card admin-hero">
+	<div>
+		<h3>Advanced Analytics Console</h3>
+		<p class="muted">Track trends, identify bottlenecks, and prioritize interventions with data-backed signals.</p>
+	</div>
+	<div class="button-row">
+		<a href="/admin/dashboard" class="btn-link">Back to Dashboard</a>
+		<a href="/admin/allocations" class="btn-link secondary">View Allocations</a>
+	</div>
+</div>
+
+<div class="stats-grid admin-kpi-grid">
+	<div class="stat-card admin-kpi">
+		<h4>Total Surplus (kg)</h4>
+		<p>{{ metrics.total_surplus_kg }}</p>
+	</div>
+	<div class="stat-card admin-kpi">
+		<h4>Allocation Efficiency</h4>
+		<p>{{ analytics.allocation_efficiency }}%</p>
+	</div>
+	<div class="stat-card admin-kpi">
+		<h4>Avg Trust Score</h4>
+		<p>{{ analytics.avg_trust_score }}</p>
+	</div>
+	<div class="stat-card admin-kpi">
+		<h4>Total Allocations</h4>
+		<p>{{ metrics.total_allocations }}</p>
+	</div>
+</div>
+
+<div class="two-column-grid admin-grid">
+	<div class="card">
+		<div class="section-header">
+			<h3>Surplus Trend (Last 6 Months)</h3>
+			<span class="muted">Monthly generated surplus</span>
+		</div>
+		<div class="trend-bars">
+			{% set max_surplus = (analytics.monthly_surplus|max) if analytics.monthly_surplus else 1 %}
+			{% for idx in range(analytics.month_labels|length) %}
+				{% set value = analytics.monthly_surplus[idx] %}
+				{% set width = ((value / max_surplus) * 100) if max_surplus else 0 %}
+				<div class="bar-row">
+					<span class="bar-label">{{ analytics.month_labels[idx] }}</span>
+					<div class="bar-track"><div class="bar-fill" style="width: {{ width|round(1) }}%;"></div></div>
+					<span class="bar-value">{{ value }} kg</span>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+	<div class="card">
+		<div class="section-header">
+			<h3>Completed Pickups Trend</h3>
+			<span class="muted">Monthly completion count</span>
+		</div>
+		<div class="trend-bars">
+			{% set max_completed = (analytics.monthly_completed_allocations|max) if analytics.monthly_completed_allocations else 1 %}
+			{% for idx in range(analytics.month_labels|length) %}
+				{% set value = analytics.monthly_completed_allocations[idx] %}
+				{% set width = ((value / max_completed) * 100) if max_completed else 0 %}
+				<div class="bar-row">
+					<span class="bar-label">{{ analytics.month_labels[idx] }}</span>
+					<div class="bar-track"><div class="bar-fill secondary" style="width: {{ width|round(1) }}%;"></div></div>
+					<span class="bar-value">{{ value }}</span>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+</div>
+
+<div class="two-column-grid admin-grid">
+	<div class="card">
+		<div class="section-header">
+			<h3>Complaint Status Mix</h3>
+			<span class="muted">Current complaint lifecycle distribution</span>
+		</div>
+		<table class="data-table compact">
+			<thead>
+				<tr>
+					<th>Status</th>
+					<th>Count</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% if analytics.complaint_status %}
+					{% for key, value in analytics.complaint_status.items() %}
+					<tr>
+						<td>{{ key|title }}</td>
+						<td>{{ value }}</td>
+					</tr>
+					{% endfor %}
+				{% else %}
+					<tr><td colspan="2">No complaint data available.</td></tr>
+				{% endif %}
+			</tbody>
+		</table>
+	</div>
+
+	<div class="card">
+		<div class="section-header">
+			<h3>Top NGOs by Completed Pickups</h3>
+			<span class="muted">Most effective collection partners</span>
+		</div>
+		<table class="data-table compact">
+			<thead>
+				<tr>
+					<th>NGO</th>
+					<th>Completed Pickups</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% if analytics.top_ngos %}
+					{% for item in analytics.top_ngos %}
+					<tr>
+						<td>{{ item.name }}</td>
+						<td>{{ item.completed_pickups }}</td>
+					</tr>
+					{% endfor %}
+				{% else %}
+					<tr><td colspan="2">No completed pickup data available.</td></tr>
+				{% endif %}
+			</tbody>
+		</table>
+	</div>
+</div>
+
+<div class="card">
+	<div class="section-header">
+		<h3>Top Providers by Donation Volume</h3>
+		<span class="muted">Total surplus contributed (kg)</span>
+	</div>
+	<table class="data-table">
+		<thead>
+			<tr>
+				<th>Provider</th>
+				<th>Donated (kg)</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% if analytics.top_providers %}
+				{% for item in analytics.top_providers %}
+				<tr>
+					<td>{{ item.name }}</td>
+					<td>{{ item.donated_kg }}</td>
+				</tr>
+				{% endfor %}
+			{% else %}
+				<tr><td colspan="2">No provider contribution data available.</td></tr>
+			{% endif %}
+		</tbody>
+	</table>
+</div>
+
+<div class="card chart-placeholder">
+	<h3>Strategy Notes</h3>
+	<p>
+		If completion efficiency is below 60%, prioritize reducing unallocated surplus and accelerating high-risk batch pickups.
+		If complaint escalations increase, focus on provider quality audits and NGO handoff SLA enforcement.
+	</p>
+</div>
+{% endblock %}

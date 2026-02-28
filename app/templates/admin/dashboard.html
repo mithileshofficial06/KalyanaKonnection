@@ -1,0 +1,243 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">ADMIN CONTROL</div>
+
+<a href="/admin/dashboard" class="nav-item active">
+    <span class="nav-icon">◻</span>
+    <span>Dashboard</span>
+</a>
+<a href="/admin/users" class="nav-item">
+    <span class="nav-icon">⌘</span>
+    <span>Users</span>
+</a>
+<a href="/admin/events" class="nav-item">
+    <span class="nav-icon">◷</span>
+    <span>Events</span>
+</a>
+<a href="/admin/allocations" class="nav-item">
+    <span class="nav-icon">⇄</span>
+    <span>Allocations</span>
+</a>
+<a href="/admin/complaints" class="nav-item">
+    <span class="nav-icon">!</span>
+    <span>Complaints</span>
+</a>
+<a href="/admin/analytics" class="nav-item">
+    <span class="nav-icon">▦</span>
+    <span>Analytics</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+    <span class="nav-icon">↩</span>
+    <span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}
+Admin Dashboard
+{% endblock %}
+
+{% block content %}
+<div class="card admin-hero">
+    <div>
+        <h3>Platform Control Center</h3>
+        <p class="muted">Monitor operations, trust, complaints, and fulfillment health in one place.</p>
+    </div>
+    <div class="button-row">
+        <a href="/admin/users" class="btn-link">Manage Users</a>
+        <a href="/admin/complaints" class="btn-link secondary">Handle Complaints</a>
+        <a href="/admin/analytics" class="btn-link secondary">Deep Analytics</a>
+    </div>
+</div>
+
+<div class="stats-grid admin-kpi-grid">
+    <div class="stat-card admin-kpi">
+        <h4>Total Providers</h4>
+        <p id="kpi-providers">{{ metrics.total_providers }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Total NGOs</h4>
+        <p id="kpi-ngos">{{ metrics.total_ngos }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Total Events</h4>
+        <p id="kpi-events">{{ metrics.total_events }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Total Surplus Generated</h4>
+        <p id="kpi-surplus">{{ metrics.total_surplus_kg }} kg</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Total Allocations</h4>
+        <p id="kpi-allocations">{{ metrics.total_allocations }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Active Complaints</h4>
+        <p id="kpi-complaints">{{ metrics.active_complaints }}</p>
+    </div>
+</div>
+
+<div class="stats-grid admin-kpi-grid">
+    <div class="stat-card admin-kpi">
+        <h4>Completion Rate</h4>
+        <p id="kpi-completion-rate">{{ insights.completion_rate }}%</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Pending Allocations</h4>
+        <p id="kpi-pending">{{ insights.pending_allocations }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>High-Risk Batches</h4>
+        <p id="kpi-risk">{{ insights.high_risk_batches }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Unallocated Surplus</h4>
+        <p id="kpi-unallocated">{{ insights.unallocated_surplus }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Avg Trust Score</h4>
+        <p id="kpi-trust">{{ insights.avg_trust_score }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Open Complaints</h4>
+        <p id="kpi-open-complaints">{{ insights.open_complaints }}</p>
+    </div>
+</div>
+
+<div class="two-column-grid admin-grid">
+    <div class="card">
+        <div class="section-header">
+            <h3>Activity Timeline</h3>
+            <span class="muted">Auto-refresh every 10 seconds</span>
+        </div>
+        <div class="admin-timeline">
+            {% if recent_activity %}
+                {% for item in recent_activity[:4] %}
+                <div class="timeline-item">
+                    <strong>{{ item.timestamp.strftime('%H:%M') if item.timestamp else '--:--' }}</strong>
+                    <span>{{ item.module }} · {{ item.event }} · {{ item.actor }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="timeline-item">
+                    <strong>--:--</strong>
+                    <span>No activity yet.</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card admin-heatmap">
+        <div class="section-header">
+            <h3>System Health</h3>
+            <span class="muted">Live operational quality indicators</span>
+        </div>
+        <div class="insight-grid">
+            <div class="insight-item">
+                <strong>Allocation Throughput</strong>
+                <span>{{ insights.completed_allocations }} completed / {{ metrics.total_allocations }} total</span>
+            </div>
+            <div class="insight-item">
+                <strong>Risk Exposure</strong>
+                <span>{{ insights.high_risk_batches }} batches need urgent pickup prioritization</span>
+            </div>
+            <div class="insight-item">
+                <strong>Trust Health</strong>
+                <span>Average partner trust score: {{ insights.avg_trust_score }}</span>
+            </div>
+            <div class="insight-item">
+                <strong>Complaint Pressure</strong>
+                <span>{{ insights.open_complaints }} active complaints pending closure</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3>Recent Platform Activity</h3>
+        <span class="muted">Operational events feed</span>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Module</th>
+                <th>Event</th>
+                <th>Actor</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="recent-activity-body">
+            {% if recent_activity %}
+                {% for item in recent_activity %}
+                <tr>
+                    <td>{{ item.timestamp.strftime('%d %b %Y, %I:%M %p') if item.timestamp else '-' }}</td>
+                    <td>{{ item.module }}</td>
+                    <td>{{ item.event }}</td>
+                    <td>{{ item.actor }}</td>
+                    <td><span class="status {{ status_class(item.status) }}">{{ item.status|title }}</span></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="5">No platform activity available yet.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    setInterval(async () => {
+        try {
+            const response = await fetch('/admin/dashboard/live', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!response.ok) return;
+            const data = await response.json();
+
+            document.getElementById('kpi-providers').textContent = data.metrics.total_providers;
+            document.getElementById('kpi-ngos').textContent = data.metrics.total_ngos;
+            document.getElementById('kpi-events').textContent = data.metrics.total_events;
+            document.getElementById('kpi-surplus').textContent = `${data.metrics.total_surplus_kg} kg`;
+            document.getElementById('kpi-allocations').textContent = data.metrics.total_allocations;
+            document.getElementById('kpi-complaints').textContent = data.metrics.active_complaints;
+            document.getElementById('kpi-completion-rate').textContent = `${data.insights.completion_rate}%`;
+            document.getElementById('kpi-pending').textContent = data.insights.pending_allocations;
+            document.getElementById('kpi-risk').textContent = data.insights.high_risk_batches;
+            document.getElementById('kpi-unallocated').textContent = data.insights.unallocated_surplus;
+            document.getElementById('kpi-trust').textContent = data.insights.avg_trust_score;
+            document.getElementById('kpi-open-complaints').textContent = data.insights.open_complaints;
+
+            const tbody = document.getElementById('recent-activity-body');
+            if (!tbody) return;
+
+            const statusClass = (value) => {
+                const key = (value || '').toLowerCase();
+                if (['completed', 'resolved', 'successful', 'active'].includes(key)) return 'completed';
+                if (['under review', 'requested', 'allocated', 'open', 'in transit'].includes(key)) return 'active';
+                if (['escalated', 'failed', 'rejected'].includes(key)) return 'escalated';
+                return 'active';
+            };
+
+            const rows = (data.recent_activity || []).map((item) => {
+                const time = item.timestamp ? new Date(item.timestamp).toLocaleString() : '-';
+                const klass = statusClass(item.status);
+                const label = item.status ? `${item.status}` : '-';
+                return `<tr>
+                    <td>${time}</td>
+                    <td>${item.module || '-'}</td>
+                    <td>${item.event || '-'}</td>
+                    <td>${item.actor || '-'}</td>
+                    <td><span class="status ${klass}">${label}</span></td>
+                </tr>`;
+            }).join('');
+
+            tbody.innerHTML = rows || '<tr><td colspan="5">No platform activity available yet.</td></tr>';
+        } catch (error) {
+            console.warn('Live refresh failed', error);
+        }
+    }, 10000);
+</script>
+
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">MAIN MENU</div>
+
+<a href="/provider/dashboard" class="nav-item">
+    <span class="nav-icon">◻</span>
+    <span>Dashboard</span>
+</a>
+<a href="/provider/add-surplus" class="nav-item">
+    <span class="nav-icon">◉</span>
+    <span>Add Surplus</span>
+</a>
+<a href="/provider/events" class="nav-item">
+    <span class="nav-icon">☰</span>
+    <span>My Events</span>
+</a>
+<a href="/provider/allocations" class="nav-item active">
+    <span class="nav-icon">⇄</span>
+    <span>Allocations</span>
+</a>
+<a href="/provider/reviews" class="nav-item">
+    <span class="nav-icon">★</span>
+    <span>Reviews</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+    <span class="nav-icon">↩</span>
+    <span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}
+Food Allocations
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <div class="section-header">
+        <h3>Active Allocations</h3>
+        <span class="muted">Receiver self-pickup verification</span>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>NGO</th>
+                <th>Quantity (kg)</th>
+                <th>Distance</th>
+                <th>Status</th>
+                <th>Pickup Time</th>
+                <th>Pickup Code</th>
+                <th class="no-sort">Verify Handover</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if allocations %}
+                {% for item in allocations %}
+                <tr>
+                    <td>{{ item.surplus.event_name if item.surplus else '-' }}</td>
+                    <td>{{ item.ngo.full_name if item.ngo else '-' }}</td>
+                    <td>{{ (item.surplus.quantity if item.surplus and item.surplus.quantity is not none else (item.surplus.quantity_kg if item.surplus else 0)) }} kg</td>
+                    <td>{{ item.surplus.distance_km if item.surplus and item.surplus.distance_km is not none else '-' }}{% if item.surplus and item.surplus.distance_km is not none %} km{% endif %}</td>
+                    <td>
+                        {% if item.status == 'completed' %}
+                            <span class="status completed">Completed</span>
+                        {% else %}
+                            <span class="status active">{{ item.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.pickup_time.strftime('%I:%M %p') if item.pickup_time else '-' }}</td>
+                    <td>{{ item.otp_code or '-' }}</td>
+                    <td>
+                        {% if item.status != 'completed' %}
+                            <form method="POST" action="{{ url_for('provider.provider_verify_pickup', allocation_id=item.id) }}" class="inline-form" style="display:flex; gap:8px; align-items:center;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="text" name="pickup_code" placeholder="Enter 6-digit code" maxlength="6" required style="max-width:150px;">
+                                <button type="submit" class="btn-link">Verify</button>
+                            </form>
+                        {% else %}
+                            <span class="muted">Verified</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="8">No allocations available.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3>Allocation Summary</h3>
+        <span class="muted">This month performance</span>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h4>Total Allocations</h4>
+            <p>{{ allocations|length }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h4>Completed</h4>
+            <p>{{ completed_count }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h4>Pending</h4>
+            <p>{{ pending_count }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h4>Total Meals Served</h4>
+            <p>{{ total_meals_served }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h4>Average Pickup Time</h4>
+            <p>{{ 'Live' if allocations else '-' }}</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

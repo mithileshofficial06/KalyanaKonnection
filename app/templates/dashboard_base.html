@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Kalyana Connection</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="dashboard-bg"></div>
+
+<div class="dashboard-container">
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">Kalyana</div>
+
+        <nav>
+            {% block sidebar %}{% endblock %}
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <div class="topbar-left">
+                <button type="button" class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+                <h1 class="page-title">
+                    {% block page_title %}{% endblock %}
+                </h1>
+            </div>
+
+            <div class="topbar-right">
+                <div class="live-indicator" id="liveIndicator">Live updates on</div>
+                <div class="user-info">
+                    Kalyana Connection Control Panel
+                </div>
+            </div>
+        </header>
+
+        <section class="content-area">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alert-stack" aria-live="polite" aria-atomic="true">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}" role="status">
+                                <span>{{ message }}</span>
+                                <button type="button" class="alert-close" aria-label="Dismiss message">×</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </section>
+
+    </main>
+
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+    (() => {
+        const sidebar = document.querySelector('.sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const liveIndicator = document.getElementById('liveIndicator');
+
+        const updateLiveIndicator = () => {
+            if (!liveIndicator) return;
+            const now = new Date();
+            const text = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            liveIndicator.textContent = `Live updates on · ${text}`;
+        };
+
+        updateLiveIndicator();
+
+        if (sidebar && menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                const isOpen = sidebar.classList.toggle('is-open');
+                menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+
+            document.addEventListener('click', (event) => {
+                if (window.innerWidth > 768) return;
+                if (!sidebar.classList.contains('is-open')) return;
+                if (sidebar.contains(event.target) || menuToggle.contains(event.target)) return;
+                sidebar.classList.remove('is-open');
+                menuToggle.setAttribute('aria-expanded', 'false');
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('is-open');
+                    menuToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        if (typeof io === 'undefined') return;
+        const socket = io({ transports: ['websocket', 'polling'] });
+        let refreshTimeout = null;
+
+        socket.on('platform_update', () => {
+            if (refreshTimeout) return;
+            refreshTimeout = setTimeout(() => {
+                updateLiveIndicator();
+                window.location.reload();
+            }, 500);
+        });
+    })();
+
+    (() => {
+        const categoryMap = {
+            success: 'completed',
+            info: 'active',
+            warning: 'pending',
+            error: 'failed'
+        };
+
+        document.querySelectorAll('.alert').forEach((alert) => {
+            const match = Array.from(alert.classList).find((name) => name.startsWith('alert-'));
+            if (!match) return;
+            const category = match.replace('alert-', '').toLowerCase();
+            const mapped = categoryMap[category];
+            if (!mapped) return;
+            alert.classList.add(`alert-${mapped}`);
+        });
+
+        document.querySelectorAll('.alert-close').forEach((button) => {
+            button.addEventListener('click', () => {
+                const alert = button.closest('.alert');
+                if (!alert) return;
+                alert.classList.add('is-dismissed');
+                setTimeout(() => alert.remove(), 220);
+            });
+        });
+
+        const getComparableValue = (text) => {
+            const normalized = (text || '').trim();
+            const numeric = parseFloat(normalized.replace(/[^0-9.\-]/g, ''));
+            if (!Number.isNaN(numeric) && /\d/.test(normalized)) return numeric;
+            const dateValue = Date.parse(normalized);
+            if (!Number.isNaN(dateValue)) return dateValue;
+            return normalized.toLowerCase();
+        };
+
+        const enhanceTable = (table) => {
+            if (table.dataset.enhanced === 'true') return;
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-scroll';
+            table.parentNode.insertBefore(wrapper, table);
+            wrapper.appendChild(table);
+
+            const toolbar = document.createElement('div');
+            toolbar.className = 'table-tools';
+            toolbar.innerHTML = '<input type="text" class="table-search" placeholder="Search in table..." aria-label="Search table"><span class="table-meta">Click column headers to sort</span>';
+            wrapper.parentNode.insertBefore(toolbar, wrapper);
+
+            const searchInput = toolbar.querySelector('.table-search');
+            const headers = Array.from(table.querySelectorAll('thead th'));
+            const dataRows = () => Array.from(tbody.querySelectorAll('tr')).filter((row) => !row.querySelector('td[colspan]'));
+            const emptyRows = () => Array.from(tbody.querySelectorAll('tr')).filter((row) => row.querySelector('td[colspan]'));
+
+            const applyFilter = () => {
+                const query = (searchInput.value || '').trim().toLowerCase();
+                let visibleCount = 0;
+
+                dataRows().forEach((row) => {
+                    const text = row.innerText.toLowerCase();
+                    const match = !query || text.includes(query);
+                    row.style.display = match ? '' : 'none';
+                    if (match) visibleCount += 1;
+                });
+
+                emptyRows().forEach((row) => {
+                    const colSpanCell = row.querySelector('td[colspan]');
+                    if (colSpanCell && query) {
+                        colSpanCell.textContent = 'No records match your search.';
+                    }
+                    row.style.display = visibleCount === 0 ? '' : 'none';
+                });
+            };
+
+            headers.forEach((header, index) => {
+                if (header.classList.contains('no-sort')) return;
+                header.classList.add('sortable');
+                header.setAttribute('role', 'button');
+                header.setAttribute('tabindex', '0');
+
+                const sortTable = () => {
+                    const currentDirection = header.dataset.direction === 'asc' ? 'desc' : 'asc';
+                    headers.forEach((item) => {
+                        item.dataset.direction = '';
+                        item.classList.remove('sorted-asc', 'sorted-desc');
+                    });
+
+                    header.dataset.direction = currentDirection;
+                    header.classList.add(currentDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+
+                    const rows = dataRows();
+                    rows.sort((a, b) => {
+                        const aText = (a.children[index]?.innerText || '').trim();
+                        const bText = (b.children[index]?.innerText || '').trim();
+                        const aValue = getComparableValue(aText);
+                        const bValue = getComparableValue(bText);
+                        if (aValue < bValue) return currentDirection === 'asc' ? -1 : 1;
+                        if (aValue > bValue) return currentDirection === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+
+                    rows.forEach((row) => tbody.appendChild(row));
+                    applyFilter();
+                };
+
+                header.addEventListener('click', sortTable);
+                header.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        sortTable();
+                    }
+                });
+            });
+
+            searchInput.addEventListener('input', applyFilter);
+            applyFilter();
+            table.dataset.enhanced = 'true';
+        };
+
+        document.querySelectorAll('.data-table').forEach(enhanceTable);
+
+        document.querySelectorAll('.section-header h3').forEach((heading) => {
+            heading.setAttribute('role', 'heading');
+            heading.setAttribute('aria-level', '2');
+        });
+
+        const normalizeStatusClass = (text) => {
+            const value = (text || '').trim().toLowerCase();
+            if (['completed', 'resolved', 'successful', 'verified', 'available', 'tracked', 'active'].includes(value)) return 'completed';
+            if (['pending', 'requested', 'allocated', 'open', 'in transit', 'under review', 'scheduled'].includes(value)) return 'pending';
+            if (['escalated', 'failed', 'rejected', 'cancelled', 'invalid'].includes(value)) return 'failed';
+            return 'active';
+        };
+
+        document.querySelectorAll('.status').forEach((element) => {
+            const mappedClass = normalizeStatusClass(element.textContent);
+            element.classList.remove('active', 'completed', 'escalated', 'pending', 'failed', 'requested', 'open', 'allocated', 'in-transit', 'cancelled', 'rejected');
+            element.classList.add(mappedClass);
+        });
+
+        const clearFieldError = (field) => {
+            field.classList.remove('is-invalid');
+            field.removeAttribute('aria-invalid');
+            const next = field.nextElementSibling;
+            if (next && next.classList.contains('field-error')) {
+                next.remove();
+            }
+        };
+
+        const showFieldError = (field, message) => {
+            clearFieldError(field);
+            field.classList.add('is-invalid');
+            field.setAttribute('aria-invalid', 'true');
+            const error = document.createElement('div');
+            error.className = 'field-error';
+            error.textContent = message || 'This field is required.';
+            field.insertAdjacentElement('afterend', error);
+        };
+
+        document.querySelectorAll('form').forEach((form) => {
+            const fields = Array.from(form.querySelectorAll('input, select, textarea')).filter((field) => {
+                if (field.type === 'hidden' || field.type === 'submit' || field.type === 'button') return false;
+                return field.hasAttribute('required');
+            });
+
+            fields.forEach((field) => {
+                field.addEventListener('input', () => {
+                    if (field.checkValidity()) {
+                        clearFieldError(field);
+                    }
+                });
+            });
+
+            form.addEventListener('submit', (event) => {
+                let hasError = false;
+                fields.forEach((field) => {
+                    if (!field.checkValidity()) {
+                        hasError = true;
+                        const message = field.validationMessage || 'Please fill this field correctly.';
+                        showFieldError(field, message);
+                    } else {
+                        clearFieldError(field);
+                    }
+                });
+
+                if (hasError) {
+                    event.preventDefault();
+                    return;
+                }
+
+                const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+                if (submitButton && !form.classList.contains('inline-form')) {
+                    const originalText = submitButton.tagName === 'BUTTON' ? submitButton.textContent : submitButton.value;
+                    submitButton.dataset.originalText = originalText;
+                    if (submitButton.tagName === 'BUTTON') {
+                        submitButton.textContent = 'Processing...';
+                    } else {
+                        submitButton.value = 'Processing...';
+                    }
+                    submitButton.disabled = true;
+                    submitButton.classList.add('is-loading');
+                }
+            });
+        });
+    })();
+</script>
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

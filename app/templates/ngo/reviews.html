@@ -1,0 +1,170 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">NGO PANEL</div>
+
+<a href="/ngo/dashboard" class="nav-item">
+    <span class="nav-icon">◻</span>
+    <span>Dashboard</span>
+</a>
+<a href="/ngo/nearby-surplus" class="nav-item">
+    <span class="nav-icon">◎</span>
+    <span>Nearby Surplus</span>
+</a>
+<a href="/ngo/allocations" class="nav-item">
+    <span class="nav-icon">⇄</span>
+    <span>Allocations</span>
+</a>
+<a href="/ngo/history" class="nav-item">
+    <span class="nav-icon">☰</span>
+    <span>Pickup History</span>
+</a>
+<a href="/ngo/reviews" class="nav-item active">
+    <span class="nav-icon">★</span>
+    <span>Reviews</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+    <span class="nav-icon">↩</span>
+    <span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}Reviews & Complaints{% endblock %}
+
+{% block content %}
+<div class="two-column-grid">
+    <div class="card">
+        <div class="section-header">
+            <h3>Submit Review</h3>
+            <span class="muted">Rate the provider experience</span>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action_type" value="review">
+            <div class="form-group">
+                <label>Select Provider</label>
+                <select name="provider_id" required>
+                    <option value="">Select Provider</option>
+                    {% for provider in providers %}
+                        <option value="{{ provider.id }}">{{ provider.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Rating (1-5)</label>
+                <select name="rating" required>
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Comment</label>
+                <textarea rows="4" name="comment" placeholder="Share pickup quality and coordination details" required></textarea>
+            </div>
+            <button class="auth-button">Submit Review</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3>Complaint Submission</h3>
+            <span class="muted">Report major issues</span>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action_type" value="complaint">
+            <div class="form-group">
+                <label>Against Provider (optional)</label>
+                <select name="provider_id">
+                    <option value="">Select Provider</option>
+                    {% for provider in providers %}
+                        <option value="{{ provider.id }}">{{ provider.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Issue Type</label>
+                <select name="issue_type" required>
+                    <option>Food Quality</option>
+                    <option>Delay</option>
+                    <option>Mismatch Quantity</option>
+                    <option>Packaging</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Details</label>
+                <textarea rows="4" name="description" placeholder="Describe the issue clearly" required></textarea>
+            </div>
+            <button class="auth-button">Submit Complaint</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3>Recent Reviews</h3>
+        <span class="muted">Latest NGO feedback entries</span>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Provider</th>
+                <th>Rating</th>
+                <th>Comment</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if reviews %}
+                {% for item in reviews %}
+                <tr>
+                    <td>{{ item.reviewed_provider.full_name if item.reviewed_provider else '-' }}</td>
+                    <td>{{ '★' * item.rating }}{{ '☆' * (5 - item.rating) }}</td>
+                    <td>{{ item.comment }}</td>
+                    <td>{{ item.created_at.strftime('%d %b %Y') if item.created_at else '-' }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="4">No reviews submitted yet.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3>Recent Complaints</h3>
+        <span class="muted">Submitted complaint records</span>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Issue Type</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if recent_complaints %}
+                {% for item in recent_complaints %}
+                <tr>
+                    <td>{{ item.issue_type }}</td>
+                    <td>{{ item.description }}</td>
+                    <td><span class="status active">{{ item.status }}</span></td>
+                    <td>{{ item.created_at.strftime('%d %b %Y') if item.created_at else '-' }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="4">No complaints submitted yet.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">NGO PANEL</div>
+
+<a href="/ngo/dashboard" class="nav-item">
+    <span class="nav-icon">◻</span>
+    <span>Dashboard</span>
+</a>
+<a href="/ngo/nearby-surplus" class="nav-item">
+    <span class="nav-icon">◎</span>
+    <span>Nearby Surplus</span>
+</a>
+<a href="/ngo/allocations" class="nav-item">
+    <span class="nav-icon">⇄</span>
+    <span>Allocations</span>
+</a>
+<a href="/ngo/history" class="nav-item active">
+    <span class="nav-icon">☰</span>
+    <span>Pickup History</span>
+</a>
+<a href="/ngo/reviews" class="nav-item">
+    <span class="nav-icon">★</span>
+    <span>Reviews</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+    <span class="nav-icon">↩</span>
+    <span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}Pickup History{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <h4>Total Meals Served</h4>
+        <p>{{ total_meals_served }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3>Completed Pickups</h3>
+        <span class="muted">Recent completed distributions</span>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Provider</th>
+                <th>Quantity</th>
+                <th>Pickup Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if history_allocations %}
+                {% for item in history_allocations %}
+                <tr>
+                    <td>{{ item.surplus.event_name if item.surplus else '-' }}</td>
+                    <td>{{ item.allocation_provider.full_name if item.allocation_provider else '-' }}</td>
+                    <td>{{ (item.surplus.quantity if item.surplus and item.surplus.quantity is not none else (item.surplus.quantity_kg if item.surplus else 0)) }} kg</td>
+                    <td>{{ item.created_at.strftime('%d %b %Y') if item.created_at else '-' }}</td>
+                    <td><span class="status completed">Completed</span></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="5">No completed pickups yet.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

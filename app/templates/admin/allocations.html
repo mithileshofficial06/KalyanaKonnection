@@ -1,0 +1,107 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">ADMIN CONTROL</div>
+
+<a href="/admin/dashboard" class="nav-item">
+    <span class="nav-icon">◻</span>
+    <span>Dashboard</span>
+</a>
+<a href="/admin/users" class="nav-item">
+    <span class="nav-icon">⌘</span>
+    <span>Users</span>
+</a>
+<a href="/admin/events" class="nav-item">
+    <span class="nav-icon">◷</span>
+    <span>Events</span>
+</a>
+<a href="/admin/allocations" class="nav-item active">
+    <span class="nav-icon">⇄</span>
+    <span>Allocations</span>
+</a>
+<a href="/admin/complaints" class="nav-item">
+    <span class="nav-icon">!</span>
+    <span>Complaints</span>
+</a>
+<a href="/admin/analytics" class="nav-item">
+    <span class="nav-icon">▦</span>
+    <span>Analytics</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+    <span class="nav-icon">↩</span>
+    <span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}Allocation Oversight{% endblock %}
+
+{% block content %}
+<div class="stats-grid admin-kpi-grid">
+    <div class="stat-card admin-kpi">
+        <h4>Total Allocations</h4>
+        <p>{{ allocation_insights.total }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Completed</h4>
+        <p>{{ allocation_insights.completed }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Requested</h4>
+        <p>{{ allocation_insights.requested }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>Allocated</h4>
+        <p>{{ allocation_insights.allocated }}</p>
+    </div>
+    <div class="stat-card admin-kpi">
+        <h4>In Transit</h4>
+        <p>{{ allocation_insights.in_transit }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3>Allocation Risk & Fulfillment Monitor</h3>
+        <span class="muted">Identify stalled requests, risky pickups, and completion performance</span>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Provider</th>
+                <th>NGO</th>
+                <th>Quantity</th>
+                <th>Distance</th>
+                <th>Status</th>
+                <th>Spoilage Risk</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if allocations %}
+                {% for item in allocations %}
+                <tr class="{% if item.surplus and item.surplus.estimated_expiry and '1' in item.surplus.estimated_expiry %}risk-high{% endif %}">
+                    <td>{{ item.surplus.event_name if item.surplus else '-' }}</td>
+                    <td>{{ item.allocation_provider.full_name if item.allocation_provider else '-' }}</td>
+                    <td>{{ item.ngo.full_name if item.ngo else '-' }}</td>
+                    <td>{{ (item.surplus.quantity if item.surplus and item.surplus.quantity is not none else (item.surplus.quantity_kg if item.surplus else 0)) }} kg</td>
+                    <td>{{ item.surplus.distance_km if item.surplus and item.surplus.distance_km is not none else '-' }}{% if item.surplus and item.surplus.distance_km is not none %} km{% endif %}</td>
+                    <td><span class="status {{ status_class(item.status) }}">{{ item.status|title }}</span></td>
+                    <td>
+                        {% if item.surplus and item.surplus.estimated_expiry and '1' in item.surplus.estimated_expiry %}
+                            High
+                        {% else %}
+                            Low
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="7">No allocations available.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

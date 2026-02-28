@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Login</h2>
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Username or Email</label>
+                <input type="text" name="identifier" required>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+
+            <button type="submit" class="auth-button">Login</button>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="/register">Register</a>
+        </div>
+
+        <div class="auth-footer">
+            Forgot password? <a href="/forgot-password">Reset password</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

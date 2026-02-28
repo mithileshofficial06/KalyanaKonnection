@@ -1,0 +1,110 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">MAIN MENU</div>
+
+<a href="/provider/dashboard" class="nav-item active">
+	<span class="nav-icon">◻</span>
+	<span>Dashboard</span>
+</a>
+
+<a href="/provider/add-surplus" class="nav-item">
+	<span class="nav-icon">◉</span>
+	<span>Add Surplus</span>
+</a>
+
+
+<a href="/provider/events" class="nav-item">
+	<span class="nav-icon">☰</span>
+	<span>My Events</span>
+</a>
+
+<a href="/provider/allocations" class="nav-item">
+	<span class="nav-icon">⇄</span>
+	<span>Allocations</span>
+</a>
+
+<a href="/provider/reviews" class="nav-item">
+	<span class="nav-icon">★</span>
+	<span>Reviews</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+	<span class="nav-icon">↩</span>
+	<span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}Provider Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+	<div class="stat-card">
+		<h4>Total Events</h4>
+		<p>{{ total_events }}</p>
+	</div>
+	<div class="stat-card">
+		<h4>Total Food Donated</h4>
+		<p>{{ total_food_donated }} kg</p>
+	</div>
+	<div class="stat-card">
+		<h4>Active Allocations</h4>
+		<p>{{ active_allocations }}</p>
+	</div>
+	<div class="stat-card">
+		<h4>Average Rating</h4>
+		<p>{{ average_rating }}</p>
+	</div>
+</div>
+
+<div class="card">
+	<div class="section-header">
+		<h3>Quick Actions</h3>
+		<span class="muted">Most used shortcuts</span>
+	</div>
+	<div class="button-row">
+		<a href="/provider/add-surplus" class="btn-link">Add Surplus</a>
+		<a href="/provider/events" class="btn-link secondary">View Events</a>
+		<a href="/provider/allocations" class="btn-link secondary">Track Allocations</a>
+	</div>
+</div>
+
+<div class="card">
+	<div class="section-header">
+		<h3>Recent Activity</h3>
+		<span class="muted">Latest provider operations</span>
+	</div>
+	<table class="data-table">
+		<thead>
+			<tr>
+				<th class="no-sort">Action</th>
+				<th>Reference</th>
+				<th>Status</th>
+				<th>Updated</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% if recent_allocations %}
+				{% for item in recent_allocations %}
+				<tr>
+					<td>Allocation Update</td>
+					<td>{{ item.surplus.event_name if item.surplus else '-' }}</td>
+					<td>
+						{% if item.status == 'completed' %}
+							<span class="status completed">Completed</span>
+						{% else %}
+							<span class="status active">{{ item.status|title }}</span>
+						{% endif %}
+					</td>
+					<td>{{ item.created_at.strftime('%d %b %Y, %I:%M %p') if item.created_at else '-' }}</td>
+				</tr>
+				{% endfor %}
+			{% else %}
+				<tr><td colspan="4">No recent activity yet.</td></tr>
+			{% endif %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}

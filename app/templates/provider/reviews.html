@@ -1,0 +1,135 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">MAIN MENU</div>
+
+<a href="/provider/dashboard" class="nav-item">
+    <span class="nav-icon">◻</span>
+    <span>Dashboard</span>
+</a>
+<a href="/provider/add-surplus" class="nav-item">
+    <span class="nav-icon">◉</span>
+    <span>Add Surplus</span>
+</a>
+<a href="/provider/events" class="nav-item">
+    <span class="nav-icon">☰</span>
+    <span>My Events</span>
+</a>
+<a href="/provider/allocations" class="nav-item">
+    <span class="nav-icon">⇄</span>
+    <span>Allocations</span>
+</a>
+<a href="/provider/reviews" class="nav-item active">
+    <span class="nav-icon">★</span>
+    <span>Reviews</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+    <span class="nav-icon">↩</span>
+    <span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}
+Reviews & Feedback
+{% endblock %}
+
+{% block content %}
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+        <h4>Average Rating</h4>
+        <p>{{ avg_rating }} / 5</p>
+    </div>
+
+    <div class="stat-card">
+        <h4>Total Reviews</h4>
+        <p>{{ reviews|length }}</p>
+    </div>
+
+    <div class="stat-card">
+        <h4>Complaints</h4>
+        <p>{{ complaints|length }}</p>
+    </div>
+
+    <div class="stat-card">
+        <h4>Trust Score</h4>
+        <p>{{ avg_rating }}</p>
+    </div>
+
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3>Recent Feedback</h3>
+        <span class="muted">Latest NGO comments</span>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>NGO</th>
+                <th>Rating</th>
+                <th>Comment</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if reviews %}
+                {% for item in reviews %}
+                <tr>
+                    <td>{{ item.ngo_reviewer.full_name if item.ngo_reviewer else '-' }}</td>
+                    <td>{{ '★' * item.rating }}{{ '☆' * (5 - item.rating) }}</td>
+                    <td>{{ item.comment }}</td>
+                    <td>{{ item.created_at.strftime('%d %b %Y') if item.created_at else '-' }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="4">No reviews yet.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3>Reported Issues</h3>
+        <span class="muted">Quality and packaging escalations</span>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>NGO</th>
+                <th>Issue</th>
+                <th>Status</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if complaints %}
+                {% for item in complaints %}
+                <tr>
+                    <td>{{ item.ngo_user.full_name if item.ngo_user else item.ngo_id }}</td>
+                    <td>{{ item.issue_type }}</td>
+                    <td>
+                        {% if item.status == 'Resolved' %}
+                            <span class="status completed">Resolved</span>
+                        {% else %}
+                            <span class="status active">{{ item.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.description }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="4">No issues reported.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

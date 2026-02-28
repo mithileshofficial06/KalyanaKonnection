@@ -1,0 +1,95 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">NGO PANEL</div>
+
+<a href="/ngo/dashboard" class="nav-item active">
+	<span class="nav-icon">◻</span>
+	<span>Dashboard</span>
+</a>
+<a href="/ngo/nearby-surplus" class="nav-item">
+	<span class="nav-icon">◎</span>
+	<span>Nearby Surplus</span>
+</a>
+<a href="/ngo/allocations" class="nav-item">
+	<span class="nav-icon">⇄</span>
+	<span>Allocations</span>
+</a>
+<a href="/ngo/history" class="nav-item">
+	<span class="nav-icon">☰</span>
+	<span>Pickup History</span>
+</a>
+<a href="/ngo/reviews" class="nav-item">
+	<span class="nav-icon">★</span>
+	<span>Reviews</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+	<span class="nav-icon">↩</span>
+	<span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}NGO Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+	<div class="stat-card">
+		<h4>Available Surplus Nearby</h4>
+		<p>{{ available_surplus_count }}</p>
+	</div>
+	<div class="stat-card">
+		<h4>Active Pickups</h4>
+		<p>{{ active_pickups_count }}</p>
+	</div>
+	<div class="stat-card">
+		<h4>Completed Pickups</h4>
+		<p>{{ completed_pickups_count }}</p>
+	</div>
+	<div class="stat-card">
+		<h4>Trust Score</h4>
+		<p>{{ trust_score }}</p>
+	</div>
+</div>
+
+<div class="card">
+	<div class="section-header">
+		<h3>Recently Available Surplus</h3>
+		<span class="muted">Fast pickup opportunities</span>
+	</div>
+	<table class="data-table">
+		<thead>
+			<tr>
+				<th>Event Name</th>
+				<th>Quantity</th>
+				<th>Distance</th>
+				<th>Spoilage Risk</th>
+				<th class="no-sort">Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% if recent_surplus %}
+				{% for item in recent_surplus %}
+				<tr>
+					<td>{{ item.event_name }}</td>
+					<td>{{ item.quantity if item.quantity is not none else item.quantity_kg }} kg</td>
+					<td>{{ item.distance_km if item.distance_km is not none else '-' }}{% if item.distance_km is not none %} km{% endif %}</td>
+					<td>
+						{% if item.estimated_expiry and '1' in item.estimated_expiry %}
+							<span class="status active">High</span>
+						{% else %}
+							<span class="status completed">Low</span>
+						{% endif %}
+					</td>
+					<td><a href="/ngo/nearby-surplus" class="btn-link">Request Pickup</a></td>
+				</tr>
+				{% endfor %}
+			{% else %}
+				<tr><td colspan="5">No available surplus right now.</td></tr>
+			{% endif %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}

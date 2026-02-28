@@ -1,0 +1,87 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-section-title">MAIN MENU</div>
+
+<a href="/provider/dashboard" class="nav-item">
+    <span class="nav-icon">◻</span>
+    <span>Dashboard</span>
+</a>
+<a href="/provider/add-surplus" class="nav-item">
+    <span class="nav-icon">◉</span>
+    <span>Add Surplus</span>
+</a>
+<a href="/provider/events" class="nav-item active">
+    <span class="nav-icon">☰</span>
+    <span>My Events</span>
+</a>
+<a href="/provider/allocations" class="nav-item">
+    <span class="nav-icon">⇄</span>
+    <span>Allocations</span>
+</a>
+<a href="/provider/reviews" class="nav-item">
+    <span class="nav-icon">★</span>
+    <span>Reviews</span>
+</a>
+
+<div class="sidebar-divider"></div>
+
+<a href="/logout" class="nav-item logout-item">
+    <span class="nav-icon">↩</span>
+    <span>Logout</span>
+</a>
+{% endblock %}
+
+{% block page_title %}
+My Events
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <h4>Upcoming Events</h4>
+        <p>{{ events|length }}</p>
+    </div>
+    <div class="stat-card">
+        <h4>Events Completed</h4>
+        <p>0</p>
+    </div>
+    <div class="stat-card">
+        <h4>Avg. Guests</h4>
+        <p>{% if events %}{{ (events|sum(attribute='guest_count') / (events|length))|round(0) }}{% else %}0{% endif %}</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-header">
+        <h3>Upcoming Events</h3>
+        <span class="muted">Manage schedule and readiness</span>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Guests</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if events %}
+                {% for item in events %}
+                <tr>
+                    <td>{{ item.event_name }}</td>
+                    <td>{{ item.event_date.strftime('%d %b %Y') if item.event_date else '-' }}</td>
+                    <td>-</td>
+                    <td><span class="status active">Scheduled</span></td>
+                    <td>{{ item.guest_count }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="5">No events created yet.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
