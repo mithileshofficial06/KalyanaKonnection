@@ -58,6 +58,12 @@ Add Surplus Food
             </div>
 
             <div class="form-group">
+                <label>Mahal Name</label>
+                <input type="text" name="mahal_name" placeholder="e.g., Sri Lakshmi Mahal" required>
+                <div class="form-help">This name is shown to receivers for pickup.</div>
+            </div>
+
+            <div class="form-group">
                 <label>Food Type</label>
                 <input type="text" name="food_type" placeholder="Rice, Curry, Sweets..." required>
                 <div class="form-help">Mention key items to help NGOs prioritize pickup.</div>
@@ -74,8 +80,8 @@ Add Surplus Food
             </div>
 
             <div class="form-group">
-                <label>Pickup Location</label>
-                <input type="text" name="provider_location" id="provider_location" list="provider_location_suggestions" placeholder="Type area like Nungambakkam" required>
+                <label>Mahal Location</label>
+                <input type="text" name="mahal_location" id="provider_location" list="provider_location_suggestions" placeholder="Type exact area/address of the mahal" required>
                 <datalist id="provider_location_suggestions"></datalist>
                 <div class="form-help">Type at least 3 letters and select a suggested locality.</div>
             </div>
@@ -103,6 +109,7 @@ Add Surplus Food
             <thead>
                 <tr>
                     <th>Event</th>
+                    <th>Mahal</th>
                     <th>Qty</th>
                     <th>Status</th>
                     <th class="no-sort">Action</th>
@@ -113,6 +120,7 @@ Add Surplus Food
                     {% for item in recent_surplus %}
                     <tr>
                         <td>{{ item.event_name }}</td>
+                        <td>{{ item.mahal_name or '-' }}</td>
                         <td>{{ item.quantity if item.quantity is not none else item.quantity_kg }} kg</td>
                         <td>
                             {% if item.status == "available" %}
@@ -137,7 +145,7 @@ Add Surplus Food
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="4">No submissions yet.</td>
+                        <td colspan="5">No submissions yet.</td>
                     </tr>
                 {% endif %}
             </tbody>

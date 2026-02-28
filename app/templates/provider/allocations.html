@@ -53,7 +53,7 @@ Food Allocations
                 <th>Distance</th>
                 <th>Status</th>
                 <th>Pickup Time</th>
-                <th>Pickup Code</th>
+                <th>Receiver Code</th>
                 <th class="no-sort">Verify Handover</th>
             </tr>
         </thead>
@@ -69,16 +69,16 @@ Food Allocations
                         {% if item.status == 'completed' %}
                             <span class="status completed">Completed</span>
                         {% else %}
-                            <span class="status active">{{ item.status|title }}</span>
+                            <span class="status pending">On the way</span>
                         {% endif %}
                     </td>
                     <td>{{ item.pickup_time.strftime('%I:%M %p') if item.pickup_time else '-' }}</td>
-                    <td>{{ item.otp_code or '-' }}</td>
+                    <td><span class="muted">Ask receiver at pickup</span></td>
                     <td>
                         {% if item.status != 'completed' %}
                             <form method="POST" action="{{ url_for('provider.provider_verify_pickup', allocation_id=item.id) }}" class="inline-form" style="display:flex; gap:8px; align-items:center;">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="text" name="pickup_code" placeholder="Enter 6-digit code" maxlength="6" required style="max-width:150px;">
+                                <input type="text" name="pickup_code" placeholder="Enter receiver 6-digit code" maxlength="6" required style="max-width:180px;">
                                 <button type="submit" class="btn-link">Verify</button>
                             </form>
                         {% else %}

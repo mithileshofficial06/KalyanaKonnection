@@ -95,7 +95,7 @@
 						{% if item.status == 'completed' %}
 							<span class="status completed">Completed</span>
 						{% else %}
-							<span class="status active">{{ item.status|title }}</span>
+							<span class="status pending">On the way</span>
 						{% endif %}
 					</td>
 					<td>{{ item.created_at.strftime('%d %b %Y, %I:%M %p') if item.created_at else '-' }}</td>

@@ -44,7 +44,10 @@
         <thead>
             <tr>
                 <th>Event</th>
+                <th>Mahal</th>
                 <th>Provider</th>
+                <th>Provider Phone</th>
+                <th>Mahal Location</th>
                 <th>Quantity</th>
                 <th>Pickup Time</th>
                 <th>Your Pickup Code</th>
@@ -56,21 +59,24 @@
                 {% for item in allocations %}
                 <tr>
                     <td>{{ item.surplus.event_name if item.surplus else '-' }}</td>
+                    <td>{{ item.surplus.mahal_name if item.surplus else '-' }}</td>
                     <td>{{ item.allocation_provider.full_name if item.allocation_provider else '-' }}</td>
+                    <td>{{ item.allocation_provider.phone_number if item.allocation_provider and item.allocation_provider.phone_number else '-' }}</td>
+                    <td>{{ item.surplus.provider_location if item.surplus else '-' }}</td>
                     <td>{{ (item.surplus.quantity if item.surplus and item.surplus.quantity is not none else (item.surplus.quantity_kg if item.surplus else 0)) }} kg</td>
                     <td>{{ item.pickup_time.strftime('%I:%M %p') if item.pickup_time else '-' }}</td>
                     <td>{{ item.otp_code or '-' }}</td>
                     <td>
                         {% if item.status == 'completed' %}
-                            <span class="status completed">Completed</span>
+                            <span class="status completed">Received</span>
                         {% else %}
-                            <span class="status active">{{ item.status|title }}</span>
+                            <span class="status pending">On the way</span>
                         {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
             {% else %}
-                <tr><td colspan="6">No allocations yet.</td></tr>
+                <tr><td colspan="9">No allocations yet.</td></tr>
             {% endif %}
         </tbody>
     </table>

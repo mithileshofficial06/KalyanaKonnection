@@ -55,6 +55,11 @@ def _is_valid_password(password: str) -> bool:
     return has_letter and has_digit
 
 
+def _is_valid_phone(phone_number: str) -> bool:
+    value = (phone_number or "").strip()
+    return bool(re.fullmatch(r"[0-9]{10}", value))
+
+
 @auth.route("/")
 def landing():
     return render_template("landing.html")
@@ -66,6 +71,7 @@ def register():
     if request.method == "POST":
         full_name = (request.form.get("full_name") or "").strip()
         email = (request.form.get("email") or "").strip().lower()
+        phone_number = (request.form.get("phone_number") or "").strip()
         password = request.form.get("password")
         role = request.form.get("role")
 
@@ -73,7 +79,7 @@ def register():
             flash("Invalid role selected.", "error")
             return redirect(url_for("auth.register"))
 
-        if not full_name or not email or not password:
+        if not full_name or not email or not password or not phone_number:
             flash("Please fill all required fields.", "warning")
             return redirect(url_for("auth.register"))
 
@@ -85,14 +91,24 @@ def register():
             flash("Password must be at least 8 characters and contain letters and numbers.", "warning")
             return redirect(url_for("auth.register"))
 
+        if not _is_valid_phone(phone_number):
+            flash("Enter a valid 10-digit phone number.", "warning")
+            return redirect(url_for("auth.register"))
+
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash("Email already registered.", "warning")
             return redirect(url_for("auth.register"))
 
+        existing_phone = User.query.filter_by(phone_number=phone_number).first()
+        if existing_phone:
+            flash("Phone number already registered.", "warning")
+            return redirect(url_for("auth.register"))
+
         otp, otp_context = _build_otp_context(
             email=email,
             full_name=full_name,
+            phone_number=phone_number,
             role=role,
             password_hash=generate_password_hash(password),
         )
@@ -126,6 +142,7 @@ def register_verify_otp():
             otp, next_context = _build_otp_context(
                 email=email,
                 full_name=context.get("full_name"),
+                phone_number=context.get("phone_number"),
                 role=context.get("role"),
                 password_hash=context.get("password_hash"),
             )
@@ -168,10 +185,22 @@ def register_verify_otp():
             flash("Email already registered. Please login.", "warning")
             return redirect(url_for("auth.login"))
 
+        phone_number = (context.get("phone_number") or "").strip()
+        if not _is_valid_phone(phone_number):
+            session.pop(REGISTER_OTP_SESSION_KEY, None)
+            flash("Invalid phone number in registration session. Please register again.", "error")
+            return redirect(url_for("auth.register"))
+
+        existing_phone = User.query.filter_by(phone_number=phone_number).first()
+        if existing_phone:
+            session.pop(REGISTER_OTP_SESSION_KEY, None)
+            flash("Phone number already registered. Please login.", "warning")
+            return redirect(url_for("auth.login"))
+
         user = User(
             full_name=context.get("full_name") or "",
             email=email,
-            phone_number=None,
+            phone_number=phone_number,
             phone_verified=True,
             role=context.get("role") or "ngo",
         )

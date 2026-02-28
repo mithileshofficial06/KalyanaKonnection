@@ -10,6 +10,7 @@ class Surplus(db.Model):
 	provider_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 	event_id = db.Column(db.Integer, db.ForeignKey("events.id"), nullable=True)
 	event_name = db.Column(db.String(150), nullable=False)
+	mahal_name = db.Column(db.String(160), nullable=True)
 	provider_name = db.Column(db.String(120), nullable=False)
 	food_type = db.Column(db.String(150), nullable=False)
 	quantity = db.Column(db.Float, nullable=False)

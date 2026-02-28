@@ -73,7 +73,10 @@
 		<thead>
 			<tr>
 				<th>Event</th>
+				<th>Mahal</th>
 				<th>Provider</th>
+				<th>Provider Phone</th>
+				<th>Mahal Location</th>
 				<th>Food Type</th>
 				<th class="no-sort">Photo</th>
 				<th>Quantity</th>
@@ -87,7 +90,10 @@
 				{% for item in available_surplus %}
 				<tr>
 					<td>{{ item.event_name }}</td>
+					<td>{{ item.mahal_name or '-' }}</td>
 					<td>{{ item.provider_name }}</td>
+					<td>{{ item.provider.phone_number if item.provider and item.provider.phone_number else '-' }}</td>
+					<td>{{ item.provider_location or '-' }}</td>
 					<td>{{ item.food_type }}</td>
 					<td>
 						{% if item.photo_path %}
@@ -119,7 +125,7 @@
 				{% endfor %}
 			{% else %}
 				<tr>
-					<td colspan="8">No matching nearby surplus found. Try increasing radius.</td>
+					<td colspan="11">No matching nearby surplus found. Try increasing radius.</td>
 				</tr>
 			{% endif %}
 		</tbody>

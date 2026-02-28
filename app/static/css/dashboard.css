@@ -82,6 +82,8 @@ textarea:focus-visible,
     margin-bottom: 20px;
     letter-spacing: 0.5px;
     padding: 8px 10px;
+    color: #ffffff;
+    text-decoration: none;
 }
 
 .sidebar-section-title {

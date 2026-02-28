@@ -71,21 +71,22 @@ def provider_add_surplus():
 
     if request.method == "POST":
         event_name = request.form.get("event_name", "").strip()
+        mahal_name = request.form.get("mahal_name", "").strip()
         provider_name = request.form.get("provider_name", "").strip() or (current_provider.full_name if current_provider else "Provider")
         food_type = request.form.get("food_type", "").strip()
         estimated_expiry = request.form.get("estimated_expiry", "").strip()
         quantity_text = request.form.get("quantity_kg", "").strip()
         distance_text = request.form.get("distance_km", "").strip()
-        provider_location = request.form.get("provider_location", "").strip()
+        mahal_location = request.form.get("mahal_location", "").strip()
         photo_file = request.files.get("food_photo")
 
-        if not event_name or not food_type or not quantity_text or not provider_location:
-            flash("Please fill event name, food type, quantity, and location.", "warning")
+        if not event_name or not mahal_name or not food_type or not quantity_text or not mahal_location:
+            flash("Please fill event name, mahal name, food type, quantity, and mahal location.", "warning")
             return redirect(url_for("provider.provider_add_surplus"))
 
-        geo = geocode_place(provider_location)
+        geo = geocode_place(mahal_location)
         if not geo:
-            flash("Unable to detect this location. Please use a valid place name.", "error")
+            flash("Unable to detect this mahal location. Please use a valid place name.", "error")
             return redirect(url_for("provider.provider_add_surplus"))
 
         try:
@@ -129,6 +130,7 @@ def provider_add_surplus():
             provider_id=provider_id,
             event_id=event.id,
             event_name=event_name,
+            mahal_name=mahal_name,
             provider_name=provider_name,
             food_type=food_type,
             quantity=quantity_kg,
@@ -225,7 +227,7 @@ def provider_verify_pickup(allocation_id):
         return redirect(url_for("provider.provider_allocations"))
 
     if not entered_code or entered_code != (allocation.otp_code or ""):
-        flash("Invalid pickup code. Please verify with receiver again.", "error")
+        flash("Invalid receiver code. Pickup remains On the way.", "error")
         return redirect(url_for("provider.provider_allocations"))
 
     allocation.status = "completed"
@@ -235,7 +237,7 @@ def provider_verify_pickup(allocation_id):
     db.session.commit()
     publish_platform_update(scope="allocation", action="completed", actor_role="provider")
 
-    flash("Pickup code verified. Food handover marked as completed.", "success")
+    flash("Receiver code verified. Provider marked Completed and receiver marked Received.", "success")
     return redirect(url_for("provider.provider_allocations"))
 
 

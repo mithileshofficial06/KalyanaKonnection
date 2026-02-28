@@ -128,7 +128,7 @@ def ngo_request_food(surplus_id):
 	db.session.commit()
 	publish_platform_update(scope="allocation", action="requested", actor_role="ngo")
 
-	flash("Pickup request sent. Share your 6-digit pickup code at collection.", "success")
+	flash("Pickup request sent. Status is now On the way. Share your 6-digit pickup code at collection.", "success")
 	return redirect(url_for("ngo.ngo_nearby_surplus"))
 
 
