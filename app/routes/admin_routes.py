@@ -1,5 +1,7 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
+import os
+from urllib.parse import urlparse
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for
 from sqlalchemy import func
@@ -371,3 +373,32 @@ def admin_analytics():
 		metrics=metrics,
 		analytics=analytics,
 	)
+
+
+@admin.route("/admin/system/health")
+@role_required("admin")
+def admin_system_health():
+	try:
+		db_url = os.getenv("DATABASE_URL", "")
+		parsed = urlparse(db_url) if db_url else None
+		host = parsed.hostname if parsed else ""
+		database = (parsed.path or "").lstrip("/") if parsed else ""
+
+		users_exists = db.session.execute(db.text("select to_regclass('public.users') is not null")).scalar()
+		columns = db.session.execute(
+			db.text(
+				"select column_name from information_schema.columns "
+				"where table_schema='public' and table_name='users' order by ordinal_position"
+			)
+		).scalars().all()
+
+		return jsonify(
+			{
+				"database_host": host,
+				"database_name": database,
+				"users_table_exists": bool(users_exists),
+				"users_columns": columns,
+			},
+		)
+	except Exception as exc:
+		return jsonify({"ok": False, "error": str(exc)}), 500
